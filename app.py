@@ -189,7 +189,9 @@ def changelogs():
         result = subprocess.run(['git','log','--pretty=format:%h|%ad|%s','--date=short'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,check=True)
         commits = []
         for line in result.stdout.split('\n'):
-            hash_, date, message = line.split('|',2)
+            if not line.strip() or line.count('|') < 2:  # Skip empty or malformed lines
+                continue
+            hash_, date, message = line.split('|', 2)
             commits.append({
                 'hash': hash_,
                 'date': date,
