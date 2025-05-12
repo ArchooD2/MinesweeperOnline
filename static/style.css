@@ -1,0 +1,103 @@
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: #f0f2f5;
+  color: #333;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 80px;
+}
+
+.container {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #005fa3;
+}
+
+#game-container table {
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+#game-container td {
+  width: 34px;
+  height: 34px;
+  text-align: center;
+  vertical-align: middle;
+  border: 1px solid #999;
+  background-color: #ccc;
+  cursor: pointer;
+  font-weight: bold;
+  font-family: monospace;
+  transition: background-color 0.15s ease;
+}
+
+#game-container td:hover {
+  background-color: #bbb;
+}
+
+#game-container td.revealed {
+  background-color: #f5f5f5;
+  cursor: default;
+}
+
+#game-container td.flagged {
+  color: crimson;
+  font-size: 20px;
+}
+
+#game-container td.mine {
+  background-color: #ff4d4d;
+  animation: pulse 0.5s infinite alternate;
+}
+
+.chording-hover {
+  background-color: #b0b0b0 !important;
+}
+
+@keyframes pulse {
+  0% { background-color: #ff4d4d; }
+  100% { background-color: #ff0000; }
+}
+
+.number-1 { color: #007bff; }
+.number-2 { color: #28a745; }
+.number-3 { color: #dc3545; }
+.number-4 { color: #6f42c1; }
+.number-5 { color: #fd7e14; }
+.number-6 { color: #20c997; }
+.number-7 { color: #343a40; }
+.number-8 { color: #6c757d; }

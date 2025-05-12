@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Leaderboard</h2>
+<table border="1" cellpadding="5" cellspacing="0">
+  <tr>
+    <th>Username</th>
+    <th>Largest Board Beaten</th>
+  </tr>
+  {% for user, size in users %}
+  <tr>
+    <td>{{ user }}</td>
+    <td>
+      {% if size >= 9 %}
+        {{ size }}x{{ size }}
+      {% else %}
+        None
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

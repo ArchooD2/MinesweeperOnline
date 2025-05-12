@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Minesweeper Game</h2>
+<p>Board: {{ board_size }}x{{ board_size }} with {{ mines }} mines.</p>
+<div id="game-container"></div>
+<button id="reset-btn">Restart Game</button>
+
+<script>
+    const BOARD_SIZE = {{ board_size | tojson }};
+    const NUM_MINES = {{ mines | tojson }};
+</script>
+<script src="{{ url_for('static', filename='minesweeper.js') }}"></script>
+{% endblock %}

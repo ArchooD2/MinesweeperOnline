@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Minesweeper</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <nav>
+      {% if current_user %}
+        <span>Welcome, {{ current_user }}!</span>
+        | <a href="{{ url_for('logout') }}">Logout</a>
+        | <a href="{{ url_for('leaderboard') }}">Leaderboard</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Login</a>
+        | <a href="{{ url_for('register') }}">Register</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main>
+    <div class="container">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</body>
+</html>
