@@ -4,7 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from functools import wraps
 from dotenv import load_dotenv
-import subprocess
+import subprocess, logging
 # Secure secret key for session cookies; in production, use an environment variable
 load_dotenv()
 
