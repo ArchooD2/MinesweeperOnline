@@ -1,1 +1,4 @@
 Flask
+werkzeug
+gunicorn
+python-dotenv
