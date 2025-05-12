@@ -186,7 +186,7 @@ def win():
 def changelogs():
     try:
         # get changelogs from git
-        result = subprocess.run(['git','log','--pretty=format:%h|%ad|%s','--date=short'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,check=True)
+        result = subprocess.run(['git','log','--pretty=format:%h|%ad|%s','--date=short','--max-count=50'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,check=True)
         commits = []
         for line in result.stdout.split('\n'):
             if not line.strip() or line.count('|') < 2:  # Skip empty or malformed lines
