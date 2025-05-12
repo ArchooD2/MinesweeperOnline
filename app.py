@@ -182,21 +182,41 @@ def win():
     con.close()
     return jsonify(success=True)
 
+import threading
+from time import time
+
+# Cache for changelogs
+changelog_cache = {
+    'data': None,
+    'last_updated': 0
+}
+cache_lock = threading.Lock()
+
 @app.route('/changelogs')
 def changelogs():
+    global changelog_cache
     try:
-        # get changelogs from git
-        result = subprocess.run(['git','log','--pretty=format:%h|%ad|%s','--date=short','--max-count=50'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,check=True)
-        commits = []
-        for line in result.stdout.split('\n'):
-            if not line.strip() or line.count('|') < 2:  # Skip empty or malformed lines
-                continue
-            hash_, date, message = line.split('|', 2)
-            commits.append({
-                'hash': hash_,
-                'date': date,
-                'message': message
-            })
+        # Check if cache is valid (5 minutes)
+        with cache_lock:
+            if changelog_cache['data'] and (time() - changelog_cache['last_updated'] < 300):
+                commits = changelog_cache['data']
+            else:
+                # Refresh cache
+                result = subprocess.run(['git', 'log', '--pretty=format:%h|%ad|%s', '--date=short', '--max-count=50'], 
+                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
+                commits = []
+                for line in result.stdout.split('\n'):
+                    if not line.strip() or line.count('|') < 2:  # Skip empty or malformed lines
+                        continue
+                    hash_, date, message = line.split('|', 2)
+                    commits.append({
+                        'hash': hash_,
+                        'date': date,
+                        'message': message
+                    })
+                # Update cache
+                changelog_cache['data'] = commits
+                changelog_cache['last_updated'] = time()
     except subprocess.CalledProcessError as e:
         commits = []
         logging.error(f"Error getting changelogs: {e.stderr}")
