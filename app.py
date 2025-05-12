@@ -199,7 +199,7 @@ def changelogs():
             })
     except subprocess.CalledProcessError as e:
         commits = []
-        print(f"Error getting changelogs: {e.stderr}")
+        logging.error(f"Error getting changelogs: {e.stderr}")
     return render_template('changelogs.html', commits=commits)
 
 if __name__ == '__main__':
