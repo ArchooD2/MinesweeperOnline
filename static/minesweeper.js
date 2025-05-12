@@ -4,6 +4,7 @@ let revealed = [];
 let flagged = [];
 let firstClick = true;
 let gameOver = false;
+let flagMode = false;
 
 function initGame() {
     // Initialize the revealed and flagged status arrays
@@ -146,6 +147,11 @@ function handleCellClick(event) {
         return; // Don't do normal reveal again if already revealed
     }
 
+    if (flagMode) {
+        handleCellRightClick(event);  // Treat tap as flag
+        return;
+    }
+    
     if (board[r][c]) {
         revealMine(r, c);
         gameOver = true;
@@ -153,7 +159,7 @@ function handleCellClick(event) {
         alert("Game Over! You hit a mine.");
         location.reload();
         return;
-    }
+    }    
 
     revealCell(r, c);
     checkWin();
