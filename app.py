@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from functools import wraps
 from dotenv import load_dotenv
+import subprocess
 # Secure secret key for session cookies; in production, use an environment variable
 load_dotenv()
 
@@ -180,6 +181,24 @@ def win():
         con.commit()
     con.close()
     return jsonify(success=True)
+
+@app.route('/changelogs')
+def changelogs():
+    try:
+        # get changelogs from git
+        result = subprocess.run(['git','log','--pretty=format:%h|%ad|%s','--date=short'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,check=True)
+        commits = []
+        for line in result.stdout.split('\n'):
+            hash_, date, message = line.split('|',2)
+            commits.append({
+                'hash': hash_,
+                'date': date,
+                'message': message
+            })
+    except subprocess.CalledProcessError as e:
+        commits = []
+        print(f"Error getting changelogs: {e.stderr}")
+    return render_template('changelogs.html', commits=commits)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
