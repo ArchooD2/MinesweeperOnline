@@ -9,7 +9,8 @@ Play Online: https://minesweeper-online-t7p0.onrender.com/game
 git clone https://github.com/ArchooD2/MinesweeperOnline.git
 cd MinesweeperOnline
 # python3 -m venv venv
-# venv/Scripts/activate
+# On Windows: venv/Scripts/activate
+# On Unix or MacOS: source venv/bin/activate
 pip install -r requirements.txt
 sqlite3 database.db < schema.sql
 flask run
