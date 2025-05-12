@@ -34,4 +34,4 @@ This project is licensed under the [Mozilla Public License 2.0 (MPL-2.0)](LICENS
 
 ## Contributing
 
-If you would like to contribute to this project, please read [CONTIBUTING.md](CONTRIBUTING.md)
+If you would like to contribute to this project, please read [CONTRIBUTING.md](CONTRIBUTING.md)
