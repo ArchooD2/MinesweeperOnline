@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, abort, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, abort, jsonify, flash
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
@@ -76,7 +76,8 @@ def register():
         con.commit()
         con.close()
         # Redirect to login page with success message
-        return render_template('login.html', success="Account created successfully. Please log in.")
+        flash("Registration successful! Please log in.")
+        return redirect(url_for('login'))
     else:
         # GET request: show registration form
         return render_template('register.html')
