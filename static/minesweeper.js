@@ -41,6 +41,13 @@ function initGame() {
     if (resetBtn) {
         resetBtn.addEventListener('click', () => location.reload());
     }
+    const flagToggle = document.getElementById('flag-mode-toggle');
+    if (flagToggle) {
+        flagToggle.addEventListener('change', (e) => {
+            flagMode = e.target.checked;
+        });
+    }
+    
 }
 
 function generateBoard(excludeRow, excludeCol) {
