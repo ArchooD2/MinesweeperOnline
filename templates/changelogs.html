@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="page-title">Changelogs!</h1>
+<div class="changelog-container">
+    {% for commit in commits %}
+    <div class="changelog-entry fade-in">
+        <div class="changelog-meta">
+            <span class="changelog-hash">{{ commit.hash }}</span>
+            <span class="changelog-date">{{ commit.date }}</span>
+        </div>
+        <p class="changelog-message">{{ commit.message }}</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
