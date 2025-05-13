@@ -200,7 +200,7 @@ function handleCellRightClick(event,fromLeft=false) {
     event.preventDefault();
     if (gameOver) return;
     if (flagMode && !fromLeft) {
-        handleCellClick(event);
+        handleCellClick(event, true);
         return;
     }
     const cell = event.currentTarget;
