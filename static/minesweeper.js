@@ -39,7 +39,18 @@ function initGame() {
     // Attach reset button event
     const resetBtn = document.getElementById('reset-btn');
     if (resetBtn) {
-        resetBtn.addEventListener('click', () => location.reload());
+        resetBtn.addEventListener('click', () => {
+            // Reset game state
+            board = [];
+            neighborCount = [];
+            revealed = [];
+            flagged = [];
+            firstClick = true;
+            gameOver = false;
+            
+            // Reinitialize game
+            initGame();
+        });
     }
     const flagToggle = document.getElementById('flag-mode-toggle');
     if (flagToggle) {
@@ -50,6 +61,14 @@ function initGame() {
     
 }
 
+/**
+ * Generates a new Minesweeper board with randomly placed mines, excluding the specified cell and its neighbors.
+ *
+ * The function initializes the global `board` array with mines, ensuring that the cell at {@link excludeRow}, {@link excludeCol} and its adjacent cells are always safe. It also computes and stores the number of adjacent mines for each cell in the global `neighborCount` array.
+ *
+ * @param {number} excludeRow - The row index of the cell to exclude from mine placement (typically the first clicked cell).
+ * @param {number} excludeCol - The column index of the cell to exclude from mine placement.
+ */
 function generateBoard(excludeRow, excludeCol) {
     // Create an empty board and place mines randomly, excluding the first clicked cell
     board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(false));
@@ -99,7 +118,15 @@ function generateBoard(excludeRow, excludeCol) {
     }
 }
 
-function handleCellClick(event) {
+/**
+ * Handles left-click events on a Minesweeper cell, revealing the cell or performing chording actions.
+ *
+ * If the cell is flagged or the game is over, the click is ignored. On the first click, generates the board excluding the clicked cell. If the cell is already revealed and has adjacent mines, performs chording: reveals all unflagged neighbors if the number of flagged neighbors matches the cell's mine count, ending the game if a mine is revealed. If flag mode is active and the click is not from a right-click, toggles the flag instead of revealing. Reveals the cell if it is not a mine; if it is a mine, ends the game and reveals all mines.
+ *
+ * @param {MouseEvent} event - The click event on the cell.
+ * @param {boolean} [fromRight=false] - Indicates if the click originated from a right-click handler to prevent recursive toggling.
+ */
+function handleCellClick(event,fromRight=false) {
     if (gameOver) return;
 
     const cell = event.currentTarget;
@@ -140,8 +167,8 @@ function handleCellClick(event) {
                             if (board[nr][nc]) {
                                 revealMine(nr, nc);
                                 revealAllMines();
-                                alert("Game Over! You hit a mine.");
-                                location.reload();
+                                alert("Game Over! You hit a mine. Press Restart to play again.");
+                                gameOver = true;
                                 return;
                             }
                             revealCell(nr, nc);
@@ -154,8 +181,8 @@ function handleCellClick(event) {
         return; // Don't do normal reveal again if already revealed
     }
 
-    if (flagMode) {
-        handleCellRightClick(event);  // Treat tap as flag
+    if (flagMode && !fromRight) {
+        handleCellRightClick(event,false);  // Treat tap as flag
         return;
     }
     
@@ -163,8 +190,7 @@ function handleCellClick(event) {
         revealMine(r, c);
         gameOver = true;
         revealAllMines();
-        alert("Game Over! You hit a mine.");
-        location.reload();
+        alert("Game Over! You hit a mine. Press Restart to play again.");
         return;
     }    
 
@@ -173,12 +199,25 @@ function handleCellClick(event) {
 }
 
 
-function handleCellRightClick(event) {
+/**
+ * Handles right-click events on a Minesweeper cell to toggle its flagged state.
+ *
+ * If flag mode is active and the event is not triggered from a left-click, treats the right-click as a reveal instead.
+ *
+ * @param {MouseEvent} event - The right-click event on the cell.
+ * @param {boolean} [fromLeft=false] - Indicates if the event originated from a left-click handler to prevent recursion.
+ */
+function handleCellRightClick(event,fromLeft=false) {
     event.preventDefault();
     if (gameOver) return;
+    if (flagMode && !fromLeft) {
+        handleCellClick(event, true);
+        return;
+    }
     const cell = event.currentTarget;
     const r = parseInt(cell.getAttribute('data-row'));
     const c = parseInt(cell.getAttribute('data-col'));
+    
     if (revealed[r][c]) {
         return; // cannot flag an already revealed cell
     }
@@ -193,8 +232,17 @@ function handleCellRightClick(event) {
         cell.classList.add('flagged');
         cell.textContent = '\uD83D\uDEA9'; // 🚩 flag emoji
     }
+
 }
 
+/**
+ * Reveals the cell at the specified row and column, recursively revealing neighboring cells if there are no adjacent mines.
+ *
+ * If the cell contains a mine, displays a bomb emoji and marks it as a mine. If the cell has adjacent mines, displays the count. If there are no adjacent mines, performs a flood fill to reveal all contiguous empty cells.
+ *
+ * @param {number} r - Row index of the cell to reveal.
+ * @param {number} c - Column index of the cell to reveal.
+ */
 function revealCell(r, c) {
     // Reveal cell at (r,c); if it has 0 adjacent mines, flood-fill neighbors
     if (r < 0 || r >= BOARD_SIZE || c < 0 || c >= BOARD_SIZE) return;
