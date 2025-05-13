@@ -39,7 +39,18 @@ function initGame() {
     // Attach reset button event
     const resetBtn = document.getElementById('reset-btn');
     if (resetBtn) {
-        resetBtn.addEventListener('click', () => location.reload());
+        resetBtn.addEventListener('click', () => {
+            // Reset game state
+            board = [];
+            neighborCount = [];
+            revealed = [];
+            flagged = [];
+            firstClick = true;
+            gameOver = false;
+            
+            // Reinitialize game
+            initGame();
+        });
     }
     const flagToggle = document.getElementById('flag-mode-toggle');
     if (flagToggle) {
