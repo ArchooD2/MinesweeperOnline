@@ -99,7 +99,7 @@ function generateBoard(excludeRow, excludeCol) {
     }
 }
 
-function handleCellClick(event) {
+function handleCellClick(event,fromRight=false) {
     if (gameOver) return;
 
     const cell = event.currentTarget;
@@ -140,8 +140,8 @@ function handleCellClick(event) {
                             if (board[nr][nc]) {
                                 revealMine(nr, nc);
                                 revealAllMines();
-                                alert("Game Over! You hit a mine.");
-                                location.reload();
+                                alert("Game Over! You hit a mine. Press Restart to play again.");
+                                gameOver = true;
                                 return;
                             }
                             revealCell(nr, nc);
@@ -154,8 +154,8 @@ function handleCellClick(event) {
         return; // Don't do normal reveal again if already revealed
     }
 
-    if (flagMode) {
-        handleCellRightClick(event);  // Treat tap as flag
+    if (flagMode && !fromRight) {
+        handleCellRightClick(event,false);  // Treat tap as flag
         return;
     }
     
@@ -163,8 +163,7 @@ function handleCellClick(event) {
         revealMine(r, c);
         gameOver = true;
         revealAllMines();
-        alert("Game Over! You hit a mine.");
-        location.reload();
+        alert("Game Over! You hit a mine. Press Restart to play again.");
         return;
     }    
 
@@ -173,12 +172,17 @@ function handleCellClick(event) {
 }
 
 
-function handleCellRightClick(event) {
+function handleCellRightClick(event,fromLeft=false) {
     event.preventDefault();
     if (gameOver) return;
+    if (flagMode && !fromLeft) {
+        handleCellClick(event);
+        return;
+    }
     const cell = event.currentTarget;
     const r = parseInt(cell.getAttribute('data-row'));
     const c = parseInt(cell.getAttribute('data-col'));
+    
     if (revealed[r][c]) {
         return; // cannot flag an already revealed cell
     }
@@ -193,6 +197,7 @@ function handleCellRightClick(event) {
         cell.classList.add('flagged');
         cell.textContent = '\uD83D\uDEA9'; // 🚩 flag emoji
     }
+
 }
 
 function revealCell(r, c) {
