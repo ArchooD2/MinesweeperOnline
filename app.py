@@ -5,7 +5,6 @@ from functools import wraps
 from dotenv import load_dotenv
 import subprocess, logging
 import psycopg2
-from psycopg2.extras import RealDictCursor
 
 # Secure secret key for session cookies; in production, use an environment variable
 load_dotenv()
@@ -15,8 +14,7 @@ app.secret_key = os.environ.get("SECRET_KEY", "wringing-out-the-sponge-of-doom")
 
 def get_db():
     return psycopg2.connect(
-        os.environ["DATABASE_URL"],
-        cursor_factory=RealDictCursor
+        os.environ["DATABASE_URL"]
     )
 
 # Login required decorator to protect certain routes
