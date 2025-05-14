@@ -7,12 +7,17 @@ let firstClick = true;
 let gameOver = false;
 let flagMode = false;
 function computeSignature(board, size) {
-        return fetch('/sign-board', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ board, size })
-        }).then(res => res.text());
-    }
+    return fetch('/sign-board', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ board, size })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Unable to obtain board signature');
+        return res.json();
+    })
+    .then(data => data.token);
+}
 function initGame() {
     // Initialize the revealed and flagged status arrays
     for (let r = 0; r < BOARD_SIZE; r++) {
