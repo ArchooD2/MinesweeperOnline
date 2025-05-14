@@ -24,40 +24,42 @@ function isSolvable(board, neighborCount, startRow, startCol) {
     const knownFlagged = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(false));
     const toReveal = [[startRow, startCol]];
 
+    const NEIGHBORS = Array.from({ length: BOARD_SIZE }, (_, r) =>
+        Array.from({ length: BOARD_SIZE }, (_, c) =>
+            Array.from([-1, 0, 1], dr => [-1, 0, 1].map(dc => [dr, dc]))
+                .flat()
+                .filter(([dr, dc]) => !(dr === 0 && dc === 0))
+                .map(([dr, dc]) => [r + dr, c + dc])
+                .filter(([nr, nc]) => nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE)
+        )
+    );
+
     while (toReveal.length > 0) {
         const [r, c] = toReveal.pop();
         if (knownRevealed[r][c]) continue;
         knownRevealed[r][c] = true;
 
         const num = neighborCount[r][c];
+        let hidden = [], flaggedCount = 0;
 
-        let hidden = [];
-        let flaggedCount = 0;
-
-        for (let dr = -1; dr <= 1; dr++) {
-            for (let dc = -1; dc <= 1; dc++) {
-                let nr = r + dr, nc = c + dc;
-                if (nr < 0 || nc < 0 || nr >= BOARD_SIZE || nc >= BOARD_SIZE || (dr === 0 && dc === 0)) continue;
-
-                if (knownFlagged[nr][nc]) flaggedCount++;
-                else if (!knownRevealed[nr][nc]) hidden.push([nr, nc]);
-            }
+        for (const [nr, nc] of NEIGHBORS[r][c]) {
+            if (knownFlagged[nr][nc]) flaggedCount++;
+            else if (!knownRevealed[nr][nc]) hidden.push([nr, nc]);
         }
 
         if (flaggedCount === num) {
-            for (let [nr, nc] of hidden) {
+            for (const [nr, nc] of hidden) {
                 if (!knownRevealed[nr][nc]) toReveal.push([nr, nc]);
             }
         }
 
         if (hidden.length > 0 && hidden.length + flaggedCount === num) {
-            for (let [nr, nc] of hidden) {
+            for (const [nr, nc] of hidden) {
                 knownFlagged[nr][nc] = true;
             }
         }
     }
 
-    // --- OVERLAP LOGIC ---
     let changed;
     do {
         changed = false;
@@ -67,21 +69,16 @@ function isSolvable(board, neighborCount, startRow, startCol) {
             for (let c = 0; c < BOARD_SIZE; c++) {
                 if (!knownRevealed[r][c]) continue;
 
-                let num = neighborCount[r][c];
+                const num = neighborCount[r][c];
                 let flaggedCount = 0, hidden = [];
 
-                for (let dr = -1; dr <= 1; dr++) {
-                    for (let dc = -1; dc <= 1; dc++) {
-                        let nr = r + dr, nc = c + dc;
-                        if (nr < 0 || nc < 0 || nr >= BOARD_SIZE || nc >= BOARD_SIZE || (dr === 0 && dc === 0)) continue;
-
-                        if (knownFlagged[nr][nc]) flaggedCount++;
-                        else if (!knownRevealed[nr][nc]) hidden.push([nr, nc]);
-                    }
+                for (const [nr, nc] of NEIGHBORS[r][c]) {
+                    if (knownFlagged[nr][nc]) flaggedCount++;
+                    else if (!knownRevealed[nr][nc]) hidden.push([nr, nc]);
                 }
 
                 if (hidden.length > 0) {
-                    frontier.push({ r, c, count: num, flaggedCount, hidden });
+                    frontier.push({ count: num, flaggedCount, hidden });
                 }
             }
         }
@@ -89,23 +86,20 @@ function isSolvable(board, neighborCount, startRow, startCol) {
         for (let i = 0; i < frontier.length; i++) {
             for (let j = 0; j < frontier.length; j++) {
                 if (i === j) continue;
-                const a = frontier[i];
-                const b = frontier[j];
+                const a = frontier[i], b = frontier[j];
 
-                const aSet = new Set(a.hidden.map(([r, c]) => `${r},${c}`));
-                const bSet = new Set(b.hidden.map(([r, c]) => `${r},${c}`));
-
-                const shared = [...aSet].filter(x => bSet.has(x));
-                const aOnly = [...aSet].filter(x => !bSet.has(x));
-                const bOnly = [...bSet].filter(x => !aSet.has(x));
+                const aMap = Object.fromEntries(a.hidden.map(([r, c]) => [`${r},${c}`, true]));
+                const shared = b.hidden.filter(([r, c]) => aMap[`${r},${c}`]);
+                const aOnly = a.hidden.filter(([r, c]) => !aMap[`${r},${c}`]);
+                const bOnly = b.hidden.filter(([r, c]) => !aMap[`${r},${c}`]);
 
                 const aVal = a.count - a.flaggedCount;
                 const bVal = b.count - b.flaggedCount;
 
-                // A superset logic: extra cells are mines
-                if (shared.length > 0 && bOnly.length === 0 && aOnly.length > 0 && aVal - bVal === aOnly.length) {
-                    for (let cell of aOnly) {
-                        const [r, c] = cell.split(',').map(Number);
+                if (shared.length === 0) continue;
+
+                if (bOnly.length === 0 && aOnly.length > 0 && aVal - bVal === aOnly.length) {
+                    for (const [r, c] of aOnly) {
                         if (!knownFlagged[r][c]) {
                             knownFlagged[r][c] = true;
                             changed = true;
@@ -113,21 +107,45 @@ function isSolvable(board, neighborCount, startRow, startCol) {
                     }
                 }
 
-                // Safe cell inference
-                if (shared.length > 0 && aOnly.length === 0 && bOnly.length > 0 && aVal === bVal) {
-                    for (let cell of bOnly) {
-                        const [r, c] = cell.split(',').map(Number);
+                if (aOnly.length === 0 && bOnly.length > 0 && aVal === bVal) {
+                    for (const [r, c] of bOnly) {
                         if (!knownRevealed[r][c] && !knownFlagged[r][c]) {
                             toReveal.push([r, c]);
+                            knownRevealed[r][c] = true;
                             changed = true;
                         }
                     }
                 }
             }
         }
-    } while (changed && toReveal.length > 0);
 
-    // Count logically revealed safe cells
+        while (toReveal.length > 0) {
+            const [r, c] = toReveal.pop();
+            if (knownRevealed[r][c]) continue;
+            knownRevealed[r][c] = true;
+
+            const num = neighborCount[r][c];
+            let hidden = [], flaggedCount = 0;
+
+            for (const [nr, nc] of NEIGHBORS[r][c]) {
+                if (knownFlagged[nr][nc]) flaggedCount++;
+                else if (!knownRevealed[nr][nc]) hidden.push([nr, nc]);
+            }
+
+            if (flaggedCount === num) {
+                for (const [nr, nc] of hidden) {
+                    if (!knownRevealed[nr][nc]) toReveal.push([nr, nc]);
+                }
+            }
+
+            if (hidden.length > 0 && hidden.length + flaggedCount === num) {
+                for (const [nr, nc] of hidden) {
+                    knownFlagged[nr][nc] = true;
+                }
+            }
+        }
+    } while (changed);
+
     let safeCount = 0, totalSafe = 0;
     for (let r = 0; r < BOARD_SIZE; r++) {
         for (let c = 0; c < BOARD_SIZE; c++) {
@@ -138,8 +156,9 @@ function isSolvable(board, neighborCount, startRow, startCol) {
         }
     }
 
-    return safeCount >= totalSafe * 0.7; // Allow board if 70% of it is logically deducible
+    return safeCount >= totalSafe * 0.6;
 }
+
 
 
 
@@ -209,7 +228,8 @@ function initGame() {
 async function generateBoard(excludeRow, excludeCol) {
     let attempts = 0;
 
-    while (attempts++ < 100000) {
+    while (attempts++ < 1000) {
+        console.log(`Attempt ${attempts} to generate board...`);
         // Step 1: Clear the board
         board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(false));
         neighborCount = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(0));
@@ -267,7 +287,7 @@ async function generateBoard(excludeRow, excludeCol) {
     }
 
     // Replace the old alert-only failure handling:
-   alert("Failed to generate a solvable board after 100000 attempts. The game will reset.");
+   alert("Failed to generate a solvable board after 1000 attempts. The game will reset.");
    // Reset game state
    board = [];
    neighborCount = [];
