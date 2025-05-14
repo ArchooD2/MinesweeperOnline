@@ -1,0 +1,120 @@
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 80px;
+}
+
+.container {
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+#game-container table {
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+#game-container td {
+  width: 34px;
+  height: 34px;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  font-weight: bold;
+  font-family: monospace;
+  transition: background-color 0.15s ease;
+}
+
+#game-container td.revealed {
+  cursor: default;
+}
+
+#game-container td.flagged {
+  font-size: 20px;
+}
+
+#game-container td.mine {
+  animation: pulse 0.5s infinite alternate;
+}
+
+.chording-hover {
+  background-color: unset !important;
+}
+
+@keyframes pulse {
+  0% { }
+  100% { }
+}
+
+.number-1, .number-2, .number-3, .number-4, .number-5, .number-6, .number-7, .number-8 {
+  /* color: handled in theme */
+}
+
+.changelog-container {
+  max-width: 800px;
+  margin: auto;
+  padding: 1rem;
+}
+
+.changelog-entry {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.fade-in {
+  opacity: 1;
+  transform: translateY(0); 
+  transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
+}
+
+.page-title {
+  font-size: 2em;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.changelog-meta {
+  font-size: 0.9em;
+  margin-bottom: 0.25rem;
+}
+
+.changelog-hash {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.changelog-message {
+  margin: 0;
+  font-size: 1em;
+}

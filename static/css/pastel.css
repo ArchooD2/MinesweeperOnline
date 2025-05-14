@@ -1,0 +1,73 @@
+
+body {
+  background: #fffafc;
+  color: #5d5d5d;
+}
+
+.container {
+  background: #ffffff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  color: #5d5d5d;
+}
+
+button {
+  background-color: #ffb3ba;
+  color: #fff;
+}
+
+button:hover {
+  background-color: #ff8a9a;
+}
+
+#game-container td {
+  border: 1px solid #ffe0e9;
+  background-color: #ffe4ec;
+}
+
+#game-container td:hover {
+  background-color: #ffd6e0;
+}
+
+#game-container td.revealed {
+  background-color: #fff0f5;
+}
+
+#game-container td.flagged {
+  color: #f77a7a;
+}
+
+#game-container td.mine {
+  background-color: #ff5c8d;
+}
+
+@keyframes pulse {
+  0% { background-color: #ff5c8d; }
+  100% { background-color: #ff85a2; }
+}
+
+.chording-hover {
+  background-color: #fbd2de !important;
+}
+
+.number-1 { color: #a2c2e0; }
+.number-2 { color: #c2e0b3; }
+.number-3 { color: #f4b3b3; }
+.number-4 { color: #ccb2f0; }
+.number-5 { color: #f8c984; }
+.number-6 { color: #b3e2e5; }
+.number-7 { color: #bdbdbd; }
+.number-8 { color: #d0d0d0; }
+
+.changelog-entry {
+  background: #fff0f5;
+  box-shadow: 0 0 5px rgba(0,0,0,0.05);
+  color: #5d5d5d;
+}
+
+.changelog-meta {
+  color: #999;
+}
+
+.changelog-message {
+  color: #5d5d5d;
+}
