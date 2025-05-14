@@ -180,7 +180,15 @@ def win():
 
     if not verify_signature(board, size, token):
         abort(403)
-
+    # --- sanity-check board structure & mine count -----------------
+    expected_mines = max(1, (size * size * 20) // 100)
+    if (
+        not isinstance(board, list) or len(board) != size or
+        any(not isinstance(row, list) or len(row) != size for row in board) or
+        sum(cell is True for row in board for cell in row) != expected_mines
+    ):
+        abort(403)     # tampered or malformed board
+    # ---------------------------------------------------------------
     con = get_db()
     cur = con.cursor()
     cur.execute('SELECT largest_board FROM users WHERE id = %s', (session['user_id'],))
