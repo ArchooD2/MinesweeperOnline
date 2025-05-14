@@ -196,7 +196,19 @@ function generateBoard(excludeRow, excludeCol) {
         }
     }
 
-    alert("Failed to generate a solvable board after 1000 attempts. Try again.");
+    // Replace the old alert-only failure handling:
+-   alert("Failed to generate a solvable board after 1000 attempts. Try again.");
++   alert("Failed to generate a solvable board after 1000 attempts. The game will reset.");
++   // Reset game state
++   board = [];
++   neighborCount = [];
++   revealed = [];
++   flagged = [];
++   firstClick = true;
++   gameOver = false;
++
++   // Reinitialize game
++   initGame();
 }
 /**
  * Handles left-click events on a Minesweeper cell, revealing the cell or performing chording actions.
