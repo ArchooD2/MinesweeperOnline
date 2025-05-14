@@ -217,7 +217,7 @@ function generateBoard(excludeRow, excludeCol) {
  * @param {MouseEvent} event - The click event on the cell.
  * @param {boolean} [fromRight=false] - Indicates if the click originated from a right-click handler to prevent recursive toggling.
  */
-function handleCellClick(event,fromRight=false) {
+async function handleCellClick(event, fromRight = false) {
     if (gameOver) return;
 
     const cell = event.currentTarget;
@@ -227,7 +227,7 @@ function handleCellClick(event,fromRight=false) {
     if (flagged[r][c]) return;
 
     if (firstClick) {
-        generateBoard(r, c);
+        await generateBoard(r, c);
         firstClick = false;
     }
 
