@@ -16,7 +16,7 @@ button {
 
 button:hover {
   background-color: #003300;
-  color: black;
+  color: #000000;
 }
 
 #game-container td {

@@ -11,12 +11,12 @@ body {
 
 button {
   background-color: #4d6fa3;
-  color: #cbd6e2;
+  color: #eff2f6;
 }
 
 button:hover {
   background-color: #1a2333;
-  color: black;
+  color: #000000;
 }
 
 #game-container td {
@@ -33,7 +33,7 @@ button:hover {
 }
 
 #game-container td.flagged {
-  color: #607d8b;
+  color: #62808e;
 }
 
 #game-container td.mine {
