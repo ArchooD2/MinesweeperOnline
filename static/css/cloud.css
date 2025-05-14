@@ -1,4 +1,5 @@
 
+ 
 body {
   background: #fbfcfd;
   color: #2d4554; /* Darkened for WCAG AA compliance */
@@ -77,3 +78,4 @@ button:hover {
 .changelog-message {
   color: #2d4554; /* Darkened for WCAG AA compliance */
 }
+
