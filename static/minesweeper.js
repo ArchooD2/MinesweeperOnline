@@ -297,8 +297,9 @@ async function handleCellClick(event, fromRight = false) {
     if (flagged[r][c]) return;
 
     if (firstClick) {
-        const success = await generateBoard(r, c);
-        if (!success) return; // Board failed to initialize; skip further logic
+        if (await generateBoard(r, c) !== true) {
+            return; // Board failed to initialize; skip further logic
+        }
         firstClick = false;
     }
 
