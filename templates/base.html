@@ -3,12 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script>
+    // Helper to get cookie by name
+    function getCookie(name) {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? match[2] : null;
+    }
+
+    // Set default theme if none is saved
+    const theme = getCookie('theme') || 'light';
+    document.getElementById('theme-link').href = `/static/css/${theme}.css`;
+  </script>
   <title>Minesweeper</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+  <link id="theme-link" rel="stylesheet">
 </head>
 <body>
   <header>
     <nav>
+      <select id="theme-select" style="margin-right: 1rem;">
+        <option value="light">☀ Light</option>
+        <option value="dark">🌙 Dark</option>
+        <option value="void">🕳 Void</option>
+        <option value="pastel">🌸 Pastel</option>
+        <option value="soyellow">💛 For Mom</option>
+      </select>
+
       {% if current_user %}
         <span>Welcome, {{ current_user }}!</span>
         | <a href="{{ url_for('logout') }}">Logout</a>
@@ -30,4 +50,30 @@
     </div>
   </main>
 </body>
+<script>
+  function getCookie(name) {
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? match[2] : null;
+  }
+
+  function setCookie(name, value, days) {
+    const expires = new Date(Date.now() + days*24*60*60*1000).toUTCString();
+    document.cookie = `${name}=${value}; expires=${expires}; path=/`;
+  }
+
+  const themeSelect = document.getElementById("theme-select");
+  const themeLink = document.getElementById("theme-link");
+  const savedTheme = getCookie("theme") || "light";
+
+  // Apply current theme on page load
+  themeLink.href = `/static/css/${savedTheme}.css`;
+  if (themeSelect) themeSelect.value = savedTheme;
+
+  // When user changes theme
+  themeSelect?.addEventListener("change", () => {
+    const selected = themeSelect.value;
+    setCookie("theme", selected, 365);
+    themeLink.href = `/static/css/${selected}.css`;
+  });
+</script>
 </html>

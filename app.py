@@ -49,6 +49,7 @@ def inject_user():
 
 @app.route('/')
 def index():
+    theme = request.cookies.get("theme", "light")
     # Home page: if logged in, redirect to game; if not, show login page
     if 'user_id' in session:
         return redirect(url_for('game'))
