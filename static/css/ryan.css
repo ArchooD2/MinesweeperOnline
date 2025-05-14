@@ -1,0 +1,77 @@
+body {
+  background: #0c1f0c; /* deep green-black */
+  color: #b6e2b6; /* light pastel green */
+}
+
+.container {
+  background: #1a2e1a;
+  box-shadow: 0 0 15px #00ff8866;
+  color: #e0f7e0;
+}
+
+button {
+  background-color: #1e4d1e;
+  color: #aaffaa;
+  border: none;
+  padding: 0.5em 1em;
+  border-radius: 4px;
+}
+
+button:hover {
+  background-color: #2a6a2a;
+  color: #d8ffd8;
+}
+
+#game-container td {
+  border: 1px solid #2b442b;
+  background-color: #1b2b1b;
+  color: #b6e2b6;
+}
+
+#game-container td:hover {
+  background-color: #254025;
+}
+
+#game-container td.revealed {
+  background-color: #162516;
+}
+
+#game-container td.flagged {
+  color: #00ff88; /* neon mint for flags */
+}
+
+#game-container td.mine {
+  background-color: #ff4477; /* pink bomb for contrast */
+}
+
+@keyframes pulse {
+  0% { background-color: #ff4477; }
+  100% { background-color: #cc3366; }
+}
+
+.chording-hover {
+  background-color: #2a3f2a !important;
+}
+
+.number-1 { color: #66ffcc; }
+.number-2 { color: #66ff66; }
+.number-3 { color: #ff6666; }
+.number-4 { color: #99bbff; }
+.number-5 { color: #ffff66; }
+.number-6 { color: #66ffff; }
+.number-7 { color: #eeeeee; }
+.number-8 { color: #aaaaaa; }
+
+.changelog-entry {
+  background: #1a2a1a;
+  box-shadow: 0 0 8px #00ff8855;
+  color: #e0f7e0;
+}
+
+.changelog-meta {
+  color: #88aa88;
+}
+
+.changelog-message {
+  color: #cceccc;
+}
