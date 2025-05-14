@@ -89,8 +89,10 @@ function isSolvable(board, neighborCount, startRow, startCol) {
                 const a = frontier[i], b = frontier[j];
 
                 const aMap = Object.fromEntries(a.hidden.map(([r, c]) => [`${r},${c}`, true]));
-                const shared = b.hidden.filter(([r, c]) => aMap[`${r},${c}`]);
-                const aOnly = a.hidden.filter(([r, c]) => !aMap[`${r},${c}`]);
+                const bMap = Object.fromEntries(b.hidden.map(([r, c]) => [`${r},${c}`, true]));
+                
+                const shared = a.hidden.filter(([r, c]) => bMap[`${r},${c}`]);
+                const aOnly = a.hidden.filter(([r, c]) => !bMap[`${r},${c}`]);
                 const bOnly = b.hidden.filter(([r, c]) => !aMap[`${r},${c}`]);
 
                 const aVal = a.count - a.flaggedCount;
@@ -110,9 +112,10 @@ function isSolvable(board, neighborCount, startRow, startCol) {
                 if (aOnly.length === 0 && bOnly.length > 0 && aVal === bVal) {
                     for (const [r, c] of bOnly) {
                         if (!knownRevealed[r][c] && !knownFlagged[r][c]) {
-                            toReveal.push([r, c]);
-                            knownRevealed[r][c] = true;
-                            changed = true;
+                            if (!knownRevealed[r][c]) {
+                                toReveal.push([r, c]);
+                                changed = true;
+                            }
                         }
                     }
                 }
