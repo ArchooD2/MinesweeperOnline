@@ -6,6 +6,7 @@ let boardToken = "";
 let firstClick = true;
 let gameOver = false;
 let flagMode = false;
+
 function computeSignature(board, size) {
     return fetch('/sign-board', {
         method: 'POST',
@@ -18,6 +19,45 @@ function computeSignature(board, size) {
     })
     .then(data => data.token);
 }
+function isSolvable(board, neighborCount, excludeRow, excludeCol) {
+    // Very basic queue-based deduction system (not perfect, but avoids 50/50s mostly)
+    const knownRevealed = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(false));
+    const queue = [[excludeRow, excludeCol]];
+
+    while (queue.length > 0) {
+        const [r, c] = queue.shift();
+        if (knownRevealed[r][c]) continue;
+        knownRevealed[r][c] = true;
+
+        const count = neighborCount[r][c];
+        let hidden = [];
+        let flagged = 0;
+
+        for (let dr = -1; dr <= 1; dr++) {
+            for (let dc = -1; dc <= 1; dc++) {
+                let nr = r + dr, nc = c + dc;
+                if (nr < 0 || nc < 0 || nr >= BOARD_SIZE || nc >= BOARD_SIZE || (dr === 0 && dc === 0)) continue;
+                if (knownRevealed[nr][nc]) continue;
+                if (board[nr][nc]) flagged++;
+                else hidden.push([nr, nc]);
+            }
+        }
+
+        if (count === flagged) {
+            queue.push(...hidden);
+        }
+    }
+
+    // Check if all non-mines are revealed
+    for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+            if (!board[r][c] && !knownRevealed[r][c]) return false;
+        }
+    }
+
+    return true;
+}
+
 function initGame() {
     // Initialize the revealed and flagged status arrays
     for (let r = 0; r < BOARD_SIZE; r++) {
@@ -82,57 +122,67 @@ function initGame() {
  * @param {number} excludeCol - The column index of the cell to exclude from mine placement.
  */
 function generateBoard(excludeRow, excludeCol) {
-    // Create an empty board and place mines randomly, excluding the first clicked cell
-    board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(false));
-    let totalCells = BOARD_SIZE * BOARD_SIZE;
-    let mineCount = NUM_MINES;
-    // List all possible cell indices except the one to exclude
-    let candidates = [];
-    for (let i = 0; i < totalCells; i++) {
-        let r = Math.floor(i / BOARD_SIZE);
-        let c = i % BOARD_SIZE;
-        let isSafeZone = Math.abs(r - excludeRow) <= 1 && Math.abs(c - excludeCol) <= 1;
-        if (isSafeZone) continue;
-        candidates.push(i);
-    }
-    // Shuffle the list of candidates
-    for (let i = candidates.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
-    }
-    // Pick the first mineCount positions for mines
-    for (let k = 0; k < mineCount && k < candidates.length; k++) {
-        let idx = candidates[k];
-        let r = Math.floor(idx / BOARD_SIZE);
-        let c = idx % BOARD_SIZE;
-        board[r][c] = true;
-    }
-    // Calculate neighbor mine counts for each cell
-    neighborCount = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(0));
-    for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
-            if (board[r][c]) {
-                continue;
-            }
-            let count = 0;
-            for (let dr = -1; dr <= 1; dr++) {
-                for (let dc = -1; dc <= 1; dc++) {
-                    if (dr === 0 && dc === 0) continue;
-                    let nr = r + dr;
-                    let nc = c + dc;
-                    if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE) {
+    let attempts = 0;
+
+    while (attempts++ < 1000) {
+        // Step 1: Clear the board
+        board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(false));
+        neighborCount = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(0));
+        
+        let totalCells = BOARD_SIZE * BOARD_SIZE;
+        let candidates = [];
+
+        for (let i = 0; i < totalCells; i++) {
+            let r = Math.floor(i / BOARD_SIZE);
+            let c = i % BOARD_SIZE;
+            let isSafeZone = Math.abs(r - excludeRow) <= 1 && Math.abs(c - excludeCol) <= 1;
+            if (!isSafeZone) candidates.push(i);
+        }
+
+        for (let i = candidates.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+        }
+
+        for (let k = 0; k < NUM_MINES && k < candidates.length; k++) {
+            let idx = candidates[k];
+            let r = Math.floor(idx / BOARD_SIZE);
+            let c = idx % BOARD_SIZE;
+            board[r][c] = true;
+        }
+
+        for (let r = 0; r < BOARD_SIZE; r++) {
+            for (let c = 0; c < BOARD_SIZE; c++) {
+                if (board[r][c]) continue;
+
+                let count = 0;
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        let nr = r + dr;
+                        let nc = c + dc;
+                        if (
+                            dr === 0 && dc === 0 ||
+                            nr < 0 || nr >= BOARD_SIZE ||
+                            nc < 0 || nc >= BOARD_SIZE
+                        ) continue;
                         if (board[nr][nc]) count++;
                     }
                 }
+                neighborCount[r][c] = count;
             }
-            neighborCount[r][c] = count;
+        }
+
+        // Check if this board is logically solvable
+        if (isSolvable(board, neighborCount, excludeRow, excludeCol)) {
+            computeSignature(board, BOARD_SIZE).then(token => {
+                boardToken = token;
+            });
+            return;
         }
     }
-    computeSignature(board, BOARD_SIZE).then(token => {
-        boardToken = token;
-    });
-}
 
+    alert("Failed to generate a solvable board after 1000 attempts. Try again.");
+}
 /**
  * Handles left-click events on a Minesweeper cell, revealing the cell or performing chording actions.
  *
