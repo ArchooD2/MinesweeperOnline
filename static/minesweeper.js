@@ -31,7 +31,6 @@ function isSolvable(board, neighborCount, startRow, startCol) {
 
         const num = neighborCount[r][c];
 
-        // Collect neighbors
         let hidden = [];
         let flaggedCount = 0;
 
@@ -45,32 +44,103 @@ function isSolvable(board, neighborCount, startRow, startCol) {
             }
         }
 
-        // Safe deduction
         if (flaggedCount === num) {
-            // All other hidden neighbors are safe
             for (let [nr, nc] of hidden) {
                 if (!knownRevealed[nr][nc]) toReveal.push([nr, nc]);
             }
         }
 
-        // Mine deduction
         if (hidden.length > 0 && hidden.length + flaggedCount === num) {
-            // All hidden neighbors must be mines
             for (let [nr, nc] of hidden) {
                 knownFlagged[nr][nc] = true;
             }
         }
     }
 
-    // Check if all non-mine cells are revealed
+    // --- OVERLAP LOGIC ---
+    let changed;
+    do {
+        changed = false;
+        let frontier = [];
+
+        for (let r = 0; r < BOARD_SIZE; r++) {
+            for (let c = 0; c < BOARD_SIZE; c++) {
+                if (!knownRevealed[r][c]) continue;
+
+                let num = neighborCount[r][c];
+                let flaggedCount = 0, hidden = [];
+
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        let nr = r + dr, nc = c + dc;
+                        if (nr < 0 || nc < 0 || nr >= BOARD_SIZE || nc >= BOARD_SIZE || (dr === 0 && dc === 0)) continue;
+
+                        if (knownFlagged[nr][nc]) flaggedCount++;
+                        else if (!knownRevealed[nr][nc]) hidden.push([nr, nc]);
+                    }
+                }
+
+                if (hidden.length > 0) {
+                    frontier.push({ r, c, count: num, flaggedCount, hidden });
+                }
+            }
+        }
+
+        for (let i = 0; i < frontier.length; i++) {
+            for (let j = 0; j < frontier.length; j++) {
+                if (i === j) continue;
+                const a = frontier[i];
+                const b = frontier[j];
+
+                const aSet = new Set(a.hidden.map(([r, c]) => `${r},${c}`));
+                const bSet = new Set(b.hidden.map(([r, c]) => `${r},${c}`));
+
+                const shared = [...aSet].filter(x => bSet.has(x));
+                const aOnly = [...aSet].filter(x => !bSet.has(x));
+                const bOnly = [...bSet].filter(x => !aSet.has(x));
+
+                const aVal = a.count - a.flaggedCount;
+                const bVal = b.count - b.flaggedCount;
+
+                // A superset logic: extra cells are mines
+                if (shared.length > 0 && bOnly.length === 0 && aOnly.length > 0 && aVal - bVal === aOnly.length) {
+                    for (let cell of aOnly) {
+                        const [r, c] = cell.split(',').map(Number);
+                        if (!knownFlagged[r][c]) {
+                            knownFlagged[r][c] = true;
+                            changed = true;
+                        }
+                    }
+                }
+
+                // Safe cell inference
+                if (shared.length > 0 && aOnly.length === 0 && bOnly.length > 0 && aVal === bVal) {
+                    for (let cell of bOnly) {
+                        const [r, c] = cell.split(',').map(Number);
+                        if (!knownRevealed[r][c] && !knownFlagged[r][c]) {
+                            toReveal.push([r, c]);
+                            changed = true;
+                        }
+                    }
+                }
+            }
+        }
+    } while (changed && toReveal.length > 0);
+
+    // Count logically revealed safe cells
+    let safeCount = 0, totalSafe = 0;
     for (let r = 0; r < BOARD_SIZE; r++) {
         for (let c = 0; c < BOARD_SIZE; c++) {
-            if (!board[r][c] && !knownRevealed[r][c]) return false;
+            if (!board[r][c]) {
+                totalSafe++;
+                if (knownRevealed[r][c]) safeCount++;
+            }
         }
     }
 
-    return true;
+    return safeCount >= totalSafe * 0.7; // Allow board if 70% of it is logically deducible
 }
+
 
 
 function initGame() {
@@ -136,10 +206,10 @@ function initGame() {
  * @param {number} excludeRow - The row index of the cell to exclude from mine placement (typically the first clicked cell).
  * @param {number} excludeCol - The column index of the cell to exclude from mine placement.
  */
-function generateBoard(excludeRow, excludeCol) {
+async function generateBoard(excludeRow, excludeCol) {
     let attempts = 0;
 
-    while (attempts++ < 1000) {
+    while (attempts++ < 100000) {
         // Step 1: Clear the board
         board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(false));
         neighborCount = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(0));
@@ -197,7 +267,7 @@ function generateBoard(excludeRow, excludeCol) {
     }
 
     // Replace the old alert-only failure handling:
-   alert("Failed to generate a solvable board after 1000 attempts. The game will reset.");
+   alert("Failed to generate a solvable board after 100000 attempts. The game will reset.");
    // Reset game state
    board = [];
    neighborCount = [];
@@ -227,9 +297,12 @@ async function handleCellClick(event, fromRight = false) {
     if (flagged[r][c]) return;
 
     if (firstClick) {
-        await generateBoard(r, c);
+        const success = await generateBoard(r, c);
+        if (!success) return; // Board failed to initialize; skip further logic
         firstClick = false;
     }
+
+    
 
     if (revealed[r][c]) {
         // --- CHORDING ---
@@ -302,7 +375,7 @@ function handleCellRightClick(event,fromLeft=false) {
     event.preventDefault();
     if (gameOver) return;
     if (flagMode && !fromLeft) {
-        handleCellClick(event, true);
+        handleCellClick(event, false);
         return;
     }
     const cell = event.currentTarget;
