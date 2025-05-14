@@ -2,4 +2,4 @@ __pycache__/
 *.pyc
 *.db
 .env
-test_supabase.py
+test_*.py
