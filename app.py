@@ -1,35 +1,38 @@
 from flask import Flask, render_template, request, redirect, url_for, session, abort, jsonify, flash
-import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from functools import wraps
 from dotenv import load_dotenv
 import subprocess, logging
+import psycopg2
+import hmac, hashlib, base64, json
+
+def generate_signature(board, size):
+    msg = json.dumps({"board": board, "size": size}, separators=(",", ":"), sort_keys=True).encode()
+    key = app.secret_key.encode()
+    sig = hmac.new(key, msg, hashlib.sha256).digest()
+    return base64.urlsafe_b64encode(sig).decode()
+
+def verify_signature(board, size, token):
+    try:
+        expected = generate_signature(board, size)
+        return hmac.compare_digest(
+            base64.urlsafe_b64decode(expected.encode()),
+            base64.urlsafe_b64decode(token.encode())
+        )
+    except Exception:
+        return False
+
 # Secure secret key for session cookies; in production, use an environment variable
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "wringing-out-the-sponge-of-doom")  # Default for development; change in production
 
-DATABASE = 'database.db'
-
 def get_db():
-    # Connect to SQLite database, returns connection
-    conn = sqlite3.connect(DATABASE)
-    # Enable foreign keys (for referential integrity if needed)
-    conn.execute('PRAGMA foreign_keys = ON')
-    return conn
-
-# Initialize database schema if not exists
-conn = get_db()
-conn.execute('''
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL UNIQUE,
-    password TEXT NOT NULL,
-    largest_board INTEGER NOT NULL DEFAULT 0
-)''')
-conn.close()
+    return psycopg2.connect(
+        os.environ["DATABASE_URL"]
+    )
 
 # Login required decorator to protect certain routes
 def login_required(f):
@@ -67,13 +70,13 @@ def register():
         # Check if username already exists
         con = get_db()
         cur = con.cursor()
-        cur.execute('SELECT id FROM users WHERE username = ?', (username,))
+        cur.execute('SELECT id FROM users WHERE username = %s', (username,))
         if cur.fetchone():
             con.close()
             return render_template('register.html', error="Username already taken.")
         # Insert new user with hashed password
         hash_pw = generate_password_hash(password)
-        cur.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, hash_pw))
+        cur.execute('INSERT INTO users (username, password) VALUES (%s, %s)', (username, hash_pw))
         con.commit()
         con.close()
         # Redirect to login page with success message
@@ -93,7 +96,7 @@ def login():
             return render_template('login.html', error="Please enter username and password.")
         con = get_db()
         cur = con.cursor()
-        cur.execute('SELECT id, password, largest_board FROM users WHERE username = ?', (username,))
+        cur.execute('SELECT id, password, largest_board FROM users WHERE username = %s', (username,))
         user = cur.fetchone()
         con.close()
         if user is None:
@@ -117,6 +120,15 @@ def logout():
     session.clear()  # Clear session data
     return redirect(url_for('login'))
 
+@app.route('/sign-board', methods=['POST'])
+@login_required
+def sign_board():
+    data = request.get_json()
+    if not data or 'board' not in data or 'size' not in data:
+        abort(400)
+    token = generate_signature(data['board'], data['size'])
+    return jsonify({'token': token})
+
 @app.route('/game')
 @login_required
 def game():
@@ -127,7 +139,7 @@ def game():
     # Query the user's current largest_board from DB to ensure it's up-to-date
     con = get_db()
     cur = con.cursor()
-    cur.execute('SELECT largest_board FROM users WHERE id = ?', (session['user_id'],))
+    cur.execute('SELECT largest_board FROM users WHERE id = %s', (session['user_id'],))
     row = cur.fetchone()
     con.close()
     if row:
@@ -159,30 +171,40 @@ def leaderboard():
 @app.route('/win', methods=['POST'])
 @login_required
 def win():
-    # Endpoint for client to report a win (board cleared)
     data = request.get_json()
-    if not data or 'size' not in data:
+    if not data or 'size' not in data or 'board' not in data or 'token' not in data:
         abort(400)
+
+    board = data['board']
     size = data['size']
-    # Validate that this board size is the next expected win for the user
+    token = data['token']
+
+    if not verify_signature(board, size, token):
+        abort(403)
+    # --- sanity-check board structure & mine count -----------------
+    expected_mines = max(1, (size * size * 20) // 100)
+    if (
+        not isinstance(board, list) or len(board) != size or
+        any(not isinstance(row, list) or len(row) != size for row in board) or
+        sum(cell is True for row in board for cell in row) != expected_mines
+    ):
+        abort(403)     # tampered or malformed board
+    # ---------------------------------------------------------------
     con = get_db()
     cur = con.cursor()
-    cur.execute('SELECT largest_board FROM users WHERE id = ?', (session['user_id'],))
+    cur.execute('SELECT largest_board FROM users WHERE id = %s', (session['user_id'],))
     row = cur.fetchone()
     if not row:
         con.close()
         abort(400)
     current_best = row[0]
-    # The expected winning size is either 9 (if none beaten yet) or current_best + 1
-    expected = current_best + 1
-    if expected < 9:
-        expected = 9
+    expected = max(9, current_best + 1)
     if size == expected and size > current_best:
-        # Update user record with new largest_board
-        cur.execute('UPDATE users SET largest_board = ? WHERE id = ?', (size, session['user_id']))
+        cur.execute('UPDATE users SET largest_board = %s WHERE id = %s', (size, session['user_id']))
         con.commit()
     con.close()
     return jsonify(success=True)
+
 
 import threading
 from time import time

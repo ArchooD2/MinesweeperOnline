@@ -2,9 +2,168 @@ let board = [];
 let neighborCount = [];
 let revealed = [];
 let flagged = [];
+let boardToken = "";
 let firstClick = true;
 let gameOver = false;
 let flagMode = false;
+
+function computeSignature(board, size) {
+    return fetch('/sign-board', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ board, size })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Unable to obtain board signature');
+        return res.json();
+    })
+    .then(data => data.token);
+}
+function isSolvable(board, neighborCount, startRow, startCol) {
+    const knownRevealed = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(false));
+    const knownFlagged = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(false));
+    const toReveal = [[startRow, startCol]];
+
+    const NEIGHBORS = Array.from({ length: BOARD_SIZE }, (_, r) =>
+        Array.from({ length: BOARD_SIZE }, (_, c) =>
+            Array.from([-1, 0, 1], dr => [-1, 0, 1].map(dc => [dr, dc]))
+                .flat()
+                .filter(([dr, dc]) => !(dr === 0 && dc === 0))
+                .map(([dr, dc]) => [r + dr, c + dc])
+                .filter(([nr, nc]) => nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE)
+        )
+    );
+
+    while (toReveal.length > 0) {
+        const [r, c] = toReveal.pop();
+        if (knownRevealed[r][c]) continue;
+        knownRevealed[r][c] = true;
+
+        const num = neighborCount[r][c];
+        let hidden = [], flaggedCount = 0;
+
+        for (const [nr, nc] of NEIGHBORS[r][c]) {
+            if (knownFlagged[nr][nc]) flaggedCount++;
+            else if (!knownRevealed[nr][nc]) hidden.push([nr, nc]);
+        }
+
+        if (flaggedCount === num) {
+            for (const [nr, nc] of hidden) {
+                if (!knownRevealed[nr][nc]) toReveal.push([nr, nc]);
+            }
+        }
+
+        if (hidden.length > 0 && hidden.length + flaggedCount === num) {
+            for (const [nr, nc] of hidden) {
+                knownFlagged[nr][nc] = true;
+            }
+        }
+    }
+
+    let changed;
+    do {
+        changed = false;
+        let frontier = [];
+
+        for (let r = 0; r < BOARD_SIZE; r++) {
+            for (let c = 0; c < BOARD_SIZE; c++) {
+                if (!knownRevealed[r][c]) continue;
+
+                const num = neighborCount[r][c];
+                let flaggedCount = 0, hidden = [];
+
+                for (const [nr, nc] of NEIGHBORS[r][c]) {
+                    if (knownFlagged[nr][nc]) flaggedCount++;
+                    else if (!knownRevealed[nr][nc]) hidden.push([nr, nc]);
+                }
+
+                if (hidden.length > 0) {
+                    frontier.push({ count: num, flaggedCount, hidden });
+                }
+            }
+        }
+
+        for (let i = 0; i < frontier.length; i++) {
+            for (let j = 0; j < frontier.length; j++) {
+                if (i === j) continue;
+                const a = frontier[i], b = frontier[j];
+
+                const aMap = Object.fromEntries(a.hidden.map(([r, c]) => [`${r},${c}`, true]));
+                const bMap = Object.fromEntries(b.hidden.map(([r, c]) => [`${r},${c}`, true]));
+                
+                const shared = a.hidden.filter(([r, c]) => bMap[`${r},${c}`]);
+                const aOnly = a.hidden.filter(([r, c]) => !bMap[`${r},${c}`]);
+                const bOnly = b.hidden.filter(([r, c]) => !aMap[`${r},${c}`]);
+
+                const aVal = a.count - a.flaggedCount;
+                const bVal = b.count - b.flaggedCount;
+
+                if (shared.length === 0) continue;
+
+                if (bOnly.length === 0 && aOnly.length > 0 && aVal - bVal === aOnly.length) {
+                    for (const [r, c] of aOnly) {
+                        if (!knownFlagged[r][c]) {
+                            knownFlagged[r][c] = true;
+                            changed = true;
+                        }
+                    }
+                }
+
+                if (aOnly.length === 0 && bOnly.length > 0 && aVal === bVal) {
+                    for (const [r, c] of bOnly) {
+                        if (!knownRevealed[r][c] && !knownFlagged[r][c]) {
+                            if (!knownRevealed[r][c]) {
+                                toReveal.push([r, c]);
+                                changed = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        while (toReveal.length > 0) {
+            const [r, c] = toReveal.pop();
+            if (knownRevealed[r][c]) continue;
+            knownRevealed[r][c] = true;
+
+            const num = neighborCount[r][c];
+            let hidden = [], flaggedCount = 0;
+
+            for (const [nr, nc] of NEIGHBORS[r][c]) {
+                if (knownFlagged[nr][nc]) flaggedCount++;
+                else if (!knownRevealed[nr][nc]) hidden.push([nr, nc]);
+            }
+
+            if (flaggedCount === num) {
+                for (const [nr, nc] of hidden) {
+                    if (!knownRevealed[nr][nc]) toReveal.push([nr, nc]);
+                }
+            }
+
+            if (hidden.length > 0 && hidden.length + flaggedCount === num) {
+                for (const [nr, nc] of hidden) {
+                    knownFlagged[nr][nc] = true;
+                }
+            }
+        }
+    } while (changed);
+
+    let safeCount = 0, totalSafe = 0;
+    for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+            if (!board[r][c]) {
+                totalSafe++;
+                if (knownRevealed[r][c]) safeCount++;
+            }
+        }
+    }
+
+    return safeCount >= totalSafe * 0.8;
+}
+
+
+
 
 function initGame() {
     // Initialize the revealed and flagged status arrays
@@ -69,55 +228,80 @@ function initGame() {
  * @param {number} excludeRow - The row index of the cell to exclude from mine placement (typically the first clicked cell).
  * @param {number} excludeCol - The column index of the cell to exclude from mine placement.
  */
-function generateBoard(excludeRow, excludeCol) {
-    // Create an empty board and place mines randomly, excluding the first clicked cell
-    board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(false));
-    let totalCells = BOARD_SIZE * BOARD_SIZE;
-    let mineCount = NUM_MINES;
-    // List all possible cell indices except the one to exclude
-    let candidates = [];
-    for (let i = 0; i < totalCells; i++) {
-        let r = Math.floor(i / BOARD_SIZE);
-        let c = i % BOARD_SIZE;
-        let isSafeZone = Math.abs(r - excludeRow) <= 1 && Math.abs(c - excludeCol) <= 1;
-        if (isSafeZone) continue;
-        candidates.push(i);
-    }
-    // Shuffle the list of candidates
-    for (let i = candidates.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
-    }
-    // Pick the first mineCount positions for mines
-    for (let k = 0; k < mineCount && k < candidates.length; k++) {
-        let idx = candidates[k];
-        let r = Math.floor(idx / BOARD_SIZE);
-        let c = idx % BOARD_SIZE;
-        board[r][c] = true;
-    }
-    // Calculate neighbor mine counts for each cell
-    neighborCount = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(0));
-    for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
-            if (board[r][c]) {
-                continue;
-            }
-            let count = 0;
-            for (let dr = -1; dr <= 1; dr++) {
-                for (let dc = -1; dc <= 1; dc++) {
-                    if (dr === 0 && dc === 0) continue;
-                    let nr = r + dr;
-                    let nc = c + dc;
-                    if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE) {
+async function generateBoard(excludeRow, excludeCol) {
+    let attempts = 0;
+
+    while (attempts++ < 1000) {
+        console.log(`Attempt ${attempts} to generate board...`);
+        // Step 1: Clear the board
+        board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(false));
+        neighborCount = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(0));
+        
+        let totalCells = BOARD_SIZE * BOARD_SIZE;
+        let candidates = [];
+
+        for (let i = 0; i < totalCells; i++) {
+            let r = Math.floor(i / BOARD_SIZE);
+            let c = i % BOARD_SIZE;
+            let isSafeZone = Math.abs(r - excludeRow) <= 1 && Math.abs(c - excludeCol) <= 1;
+            if (!isSafeZone) candidates.push(i);
+        }
+
+        for (let i = candidates.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+        }
+
+        for (let k = 0; k < NUM_MINES && k < candidates.length; k++) {
+            let idx = candidates[k];
+            let r = Math.floor(idx / BOARD_SIZE);
+            let c = idx % BOARD_SIZE;
+            board[r][c] = true;
+        }
+
+        for (let r = 0; r < BOARD_SIZE; r++) {
+            for (let c = 0; c < BOARD_SIZE; c++) {
+                if (board[r][c]) continue;
+
+                let count = 0;
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        let nr = r + dr;
+                        let nc = c + dc;
+                        if (
+                            dr === 0 && dc === 0 ||
+                            nr < 0 || nr >= BOARD_SIZE ||
+                            nc < 0 || nc >= BOARD_SIZE
+                        ) continue;
                         if (board[nr][nc]) count++;
                     }
                 }
+                neighborCount[r][c] = count;
             }
-            neighborCount[r][c] = count;
+        }
+
+        // Check if this board is logically solvable
+        if (isSolvable(board, neighborCount, excludeRow, excludeCol)) {
+            computeSignature(board, BOARD_SIZE).then(token => {
+                boardToken = token;
+            });
+            return true;
         }
     }
-}
 
+    // Replace the old alert-only failure handling:
+   alert("Failed to generate a solvable board after 1000 attempts. The game will reset.");
+   // Reset game state
+   board = [];
+   neighborCount = [];
+   revealed = [];
+   flagged = [];
+   firstClick = true;
+   gameOver = false;
+
+   // Reinitialize game
+   initGame();
+}
 /**
  * Handles left-click events on a Minesweeper cell, revealing the cell or performing chording actions.
  *
@@ -126,7 +310,7 @@ function generateBoard(excludeRow, excludeCol) {
  * @param {MouseEvent} event - The click event on the cell.
  * @param {boolean} [fromRight=false] - Indicates if the click originated from a right-click handler to prevent recursive toggling.
  */
-function handleCellClick(event,fromRight=false) {
+async function handleCellClick(event, fromRight = false) {
     if (gameOver) return;
 
     const cell = event.currentTarget;
@@ -136,9 +320,13 @@ function handleCellClick(event,fromRight=false) {
     if (flagged[r][c]) return;
 
     if (firstClick) {
-        generateBoard(r, c);
+        if (await generateBoard(r, c) !== true) {
+            return; // Board failed to initialize; skip further logic
+        }
         firstClick = false;
     }
+
+    
 
     if (revealed[r][c]) {
         // --- CHORDING ---
@@ -211,7 +399,7 @@ function handleCellRightClick(event,fromLeft=false) {
     event.preventDefault();
     if (gameOver) return;
     if (flagMode && !fromLeft) {
-        handleCellClick(event, true);
+        handleCellClick(event, false);
         return;
     }
     const cell = event.currentTarget;
@@ -325,10 +513,15 @@ function checkWin() {
         fetch('/win', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ size: BOARD_SIZE })
+            body: JSON.stringify({ 
+                size: BOARD_SIZE, 
+                board: board, 
+                token: boardToken 
+            })
         }).then(response => {
             location.reload();
         });
+
     }
 }
 
