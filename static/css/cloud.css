@@ -1,0 +1,79 @@
+
+body {
+  background: #fbfcfd;
+  color: #2d4554; /* Darkened for WCAG AA compliance */
+}
+
+.container {
+  background: #f0f6fb;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  color: #2d4554; /* Darkened for WCAG AA compliance */
+}
+
+button {
+  background-color: #dbe6f0;
+  color: #566772;
+}
+
+button:hover {
+  background-color: #2a5a83; /* Darkened for hover state */
+  color: #ffffff;            /* Maintain white text for contrast */
+}
+
+#game-container td {
+  border: 1px solid #ccc;
+  background-color: #3a7cb3; /* Changed for better contrast */
+  color: #ffffff;            /* Explicit white text for contrast */
+}
+
+#game-container td:hover {
+  background-color: #2a5a83; /* Darkened for hover state */
+}
+
+#game-container td.revealed {
+  background-color: #fbfcfd;
+  color: #2d4554; /* Explicit text color for contrast */
+}
+
+#game-container td.flagged {
+  color: #0d6b96; /* Darkened for better contrast */
+}
+
+#game-container td.mine {
+  background-color: #2a6b99; /* Darkened for better contrast */
+  color: #ffffff;            /* Explicit white text for contrast */
+}
+
+@keyframes pulse {
+  0%   { background-color: #9cc7e0; }
+  50%  { background-color: #2a6b99; } /* Added midpoint with darker color */
+  100% { background-color: #0d6b96; } /* Darkened endpoint */
+}
+
+.chording-hover {
+  background-color: #2a5a83 !important; /* Darkened for contrast */
+  color: #ffffff !important;            /* Explicit white text for contrast */
+}
+
+.number-1 { color: #1566b3; /* Darkened for better contrast */ }
+.number-2 { color: #2c7821; /* Darkened for better contrast */ }
+.number-3 { color: #cc3333; /* Darkened for better contrast */ }
+.number-4 { color: #6013c3; /* Darkened for better contrast */ }
+.number-5 { color: #b96504; /* Darkened for better contrast */ }
+.number-6 { color: #147880; /* Darkened for better contrast */ }
+.number-7 { color: #5d5d5d; /* Darkened for better contrast */ }
+.number-8 { color: #595959; /* Darkened for better contrast */ }
+
+.changelog-entry {
+  background: #f0f6fb;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  color: #2d4554; /* Darkened for WCAG AA compliance */
+}
+
+.changelog-meta {
+  color: #595959; /* Darkened for better contrast */
+}
+
+.changelog-message {
+  color: #2d4554; /* Darkened for WCAG AA compliance */
+}

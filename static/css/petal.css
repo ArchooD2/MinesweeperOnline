@@ -1,52 +1,52 @@
-
 body {
-  background: #fffafc;
-  color: #5d5d5d;
+  background: #fff7f9;
+  color: #704c5e;
 }
 
 .container {
-  background: #ffffff;
-  box-shadow: 0 0 10px rgba(0,0,0,0.05);
-  color: #5d5d5d;
+  background: #fff0f5;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  color: #704c5e;
 }
 
 button {
-  background-color: #ffb3ba;
-  color: #ffffff;
+  background-color: #ffccde;
+  color: #704c5e;
 }
 
 button:hover {
-  background-color: #ff8a9a;
+  background-color: #ffc0cb;
+  color: black;
 }
 
 #game-container td {
-  border: 1px solid #ffe0e9;
-  background-color: #ffe4ec;
+  border: 1px solid #ccc;
+  background-color: #ffccde;
 }
 
 #game-container td:hover {
-  background-color: #ffd6e0;
+  background-color: #ffc0cb;
 }
 
 #game-container td.revealed {
-  background-color: #fff0f5;
+  background-color: #fff7f9;
 }
 
 #game-container td.flagged {
-  color: #df0d0d;
+  color: #d7285c;
 }
 
 #game-container td.mine {
-  background-color: #ff5c8d;
+  background-color: #ff8ba0;
 }
 
 @keyframes pulse {
-  0% { background-color: #ff5c8d; }
-  100% { background-color: #ff85a2; }
+  0% { background-color: #ff8ba0; }
+  100% { background-color: #e05780; }
 }
 
 .chording-hover {
-  background-color: #fbd2de !important;
+  background-color: #ffc0cb !important;
 }
 
 .number-1 { color: #a2c2e0; }
@@ -60,8 +60,8 @@ button:hover {
 
 .changelog-entry {
   background: #fff0f5;
-  box-shadow: 0 0 5px rgba(0,0,0,0.05);
-  color: #5d5d5d;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  color: #704c5e;
 }
 
 .changelog-meta {
@@ -69,5 +69,5 @@ button:hover {
 }
 
 .changelog-message {
-  color: #5d5d5d;
+  color: #704c5e;
 }

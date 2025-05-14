@@ -12,12 +12,26 @@
     <nav>
       <label for="theme-select" class="visually-hidden">Theme:</label>
       <select id="theme-select" aria-label="Select Theme" style="margin-right: 1rem;">
-        <option value="light">☀ Light</option>
-        <option value="dark">🌙 Dark</option>
-        <option value="void">🕳 Void</option>
-        <option value="pastel">🌸 Pastel</option>
-        <option value="soyellow">💛 For Mom</option>
-        <option value="ryan">🔥 Ryan</option>
+        <optgroup label="Light Themes"></optgroup>
+          <option value="light">☀ Light</option>
+          <option value="pastel">🌸 Pastel</option>
+          <option value="soyellow">💛 For Mom</option>
+          <option value="petal">🌸 Petal</option>
+          <option value="latte">🥛 Latte</option>
+          <option value="daisy">🌼 Daisy</option>
+          <option value="cloud">☁️ Cloud</option>
+        </optgroup>
+        <optgroup label="Dark Themes">
+          <option value="dark">🌙 Dark</option>
+          <option value="void">🕳 Void</option>
+          <option value="ryan">🔥 Ryan</option>
+          <option value="mocha">☕ Mocha</option>
+          <option value="slate">🪨 Slate</option>
+          <option value="nebula">🌌 Nebula</option>
+          <option value="midnight">🌃 Midnight</option>
+          <option value="terminal">💻 Terminal</option>
+          <option value="goth">🖤 Goth</option>
+        </optgroup>
       </select>
 
       {% if current_user %}

@@ -1,52 +1,52 @@
-
 body {
-  background: #fffafc;
-  color: #5d5d5d;
+  background: #fffff7;
+  color: #5e5f1b;
 }
 
 .container {
   background: #ffffff;
-  box-shadow: 0 0 10px rgba(0,0,0,0.05);
-  color: #5d5d5d;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  color: #5e5f1b;
 }
 
 button {
-  background-color: #ffb3ba;
-  color: #ffffff;
+  background-color: #ffe800;
+  color: #5e5f1b;
 }
 
 button:hover {
-  background-color: #ff8a9a;
+  background-color: #fffbcc;
+  color: black;
 }
 
 #game-container td {
-  border: 1px solid #ffe0e9;
-  background-color: #ffe4ec;
+  border: 1px solid #ccc;
+  background-color: #ffe800;
 }
 
 #game-container td:hover {
-  background-color: #ffd6e0;
+  background-color: #fffbcc;
 }
 
 #game-container td.revealed {
-  background-color: #fff0f5;
+  background-color: #fffff7;
 }
 
 #game-container td.flagged {
-  color: #df0d0d;
+  color: #5f7e26;
 }
 
 #game-container td.mine {
-  background-color: #ff5c8d;
+  background-color: #ffdd33;
 }
 
 @keyframes pulse {
-  0% { background-color: #ff5c8d; }
-  100% { background-color: #ff85a2; }
+  0% { background-color: #ffdd33; }
+  100% { background-color: #94c43c; }
 }
 
 .chording-hover {
-  background-color: #fbd2de !important;
+  background-color: #fffbcc !important;
 }
 
 .number-1 { color: #a2c2e0; }
@@ -59,9 +59,9 @@ button:hover {
 .number-8 { color: #d0d0d0; }
 
 .changelog-entry {
-  background: #fff0f5;
-  box-shadow: 0 0 5px rgba(0,0,0,0.05);
-  color: #5d5d5d;
+  background: #ffffff;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  color: #5e5f1b;
 }
 
 .changelog-meta {
@@ -69,5 +69,5 @@ button:hover {
 }
 
 .changelog-message {
-  color: #5d5d5d;
+  color: #5e5f1b;
 }
