@@ -126,7 +126,8 @@ def sign_board():
     data = request.get_json()
     if not data or 'board' not in data or 'size' not in data:
         abort(400)
-    return generate_signature(data['board'], data['size'])
+    token = generate_signature(data['board'], data['size'])
+    return jsonify({'token': token})
 
 @app.route('/game')
 @login_required
