@@ -262,7 +262,7 @@ async function generateBoard(excludeRow, excludeCol) {
             computeSignature(board, BOARD_SIZE).then(token => {
                 boardToken = token;
             });
-            return;
+            return true;
         }
     }
 
