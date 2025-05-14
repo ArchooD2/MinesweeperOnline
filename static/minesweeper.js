@@ -156,7 +156,7 @@ function isSolvable(board, neighborCount, startRow, startCol) {
         }
     }
 
-    return safeCount >= totalSafe * 0.6;
+    return safeCount >= totalSafe * 0.8;
 }
 
 
