@@ -19,36 +19,50 @@ function computeSignature(board, size) {
     })
     .then(data => data.token);
 }
-function isSolvable(board, neighborCount, excludeRow, excludeCol) {
-    // Very basic queue-based deduction system (not perfect, but avoids 50/50s mostly)
+function isSolvable(board, neighborCount, startRow, startCol) {
     const knownRevealed = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(false));
-    const queue = [[excludeRow, excludeCol]];
+    const knownFlagged = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(false));
+    const toReveal = [[startRow, startCol]];
 
-    while (queue.length > 0) {
-        const [r, c] = queue.shift();
+    while (toReveal.length > 0) {
+        const [r, c] = toReveal.pop();
         if (knownRevealed[r][c]) continue;
         knownRevealed[r][c] = true;
 
-        const count = neighborCount[r][c];
+        const num = neighborCount[r][c];
+
+        // Collect neighbors
         let hidden = [];
-        let flagged = 0;
+        let flaggedCount = 0;
 
         for (let dr = -1; dr <= 1; dr++) {
             for (let dc = -1; dc <= 1; dc++) {
                 let nr = r + dr, nc = c + dc;
                 if (nr < 0 || nc < 0 || nr >= BOARD_SIZE || nc >= BOARD_SIZE || (dr === 0 && dc === 0)) continue;
-                if (knownRevealed[nr][nc]) continue;
-                if (board[nr][nc]) flagged++;
-                else hidden.push([nr, nc]);
+
+                if (knownFlagged[nr][nc]) flaggedCount++;
+                else if (!knownRevealed[nr][nc]) hidden.push([nr, nc]);
             }
         }
 
-        if (count === flagged) {
-            queue.push(...hidden);
+        // Safe deduction
+        if (flaggedCount === num) {
+            // All other hidden neighbors are safe
+            for (let [nr, nc] of hidden) {
+                if (!knownRevealed[nr][nc]) toReveal.push([nr, nc]);
+            }
+        }
+
+        // Mine deduction
+        if (hidden.length > 0 && hidden.length + flaggedCount === num) {
+            // All hidden neighbors must be mines
+            for (let [nr, nc] of hidden) {
+                knownFlagged[nr][nc] = true;
+            }
         }
     }
 
-    // Check if all non-mines are revealed
+    // Check if all non-mine cells are revealed
     for (let r = 0; r < BOARD_SIZE; r++) {
         for (let c = 0; c < BOARD_SIZE; c++) {
             if (!board[r][c] && !knownRevealed[r][c]) return false;
@@ -57,6 +71,7 @@ function isSolvable(board, neighborCount, excludeRow, excludeCol) {
 
     return true;
 }
+
 
 function initGame() {
     // Initialize the revealed and flagged status arrays
