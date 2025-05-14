@@ -2,10 +2,17 @@ let board = [];
 let neighborCount = [];
 let revealed = [];
 let flagged = [];
+let boardToken = "";
 let firstClick = true;
 let gameOver = false;
 let flagMode = false;
-
+function computeSignature(board, size) {
+        return fetch('/sign-board', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ board, size })
+        }).then(res => res.text());
+    }
 function initGame() {
     // Initialize the revealed and flagged status arrays
     for (let r = 0; r < BOARD_SIZE; r++) {
@@ -116,6 +123,9 @@ function generateBoard(excludeRow, excludeCol) {
             neighborCount[r][c] = count;
         }
     }
+    computeSignature(board, BOARD_SIZE).then(token => {
+        boardToken = token;
+    });
 }
 
 /**
@@ -325,10 +335,15 @@ function checkWin() {
         fetch('/win', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ size: BOARD_SIZE })
+            body: JSON.stringify({ 
+                size: BOARD_SIZE, 
+                board: board, 
+                token: boardToken 
+            })
         }).then(response => {
             location.reload();
         });
+
     }
 }
 

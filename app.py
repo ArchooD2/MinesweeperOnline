@@ -5,6 +5,23 @@ from functools import wraps
 from dotenv import load_dotenv
 import subprocess, logging
 import psycopg2
+import hmac, hashlib, base64, json
+
+def generate_signature(board, size):
+    msg = json.dumps({"board": board, "size": size}, separators=(",", ":"), sort_keys=True).encode()
+    key = app.secret_key.encode()
+    sig = hmac.new(key, msg, hashlib.sha256).digest()
+    return base64.urlsafe_b64encode(sig).decode()
+
+def verify_signature(board, size, token):
+    try:
+        expected = generate_signature(board, size)
+        return hmac.compare_digest(
+            base64.urlsafe_b64decode(expected.encode()),
+            base64.urlsafe_b64decode(token.encode())
+        )
+    except Exception:
+        return False
 
 # Secure secret key for session cookies; in production, use an environment variable
 load_dotenv()
@@ -103,6 +120,14 @@ def logout():
     session.clear()  # Clear session data
     return redirect(url_for('login'))
 
+@app.route('/sign-board', methods=['POST'])
+@login_required
+def sign_board():
+    data = request.get_json()
+    if not data or 'board' not in data or 'size' not in data:
+        abort(400)
+    return generate_signature(data['board'], data['size'])
+
 @app.route('/game')
 @login_required
 def game():
@@ -145,12 +170,17 @@ def leaderboard():
 @app.route('/win', methods=['POST'])
 @login_required
 def win():
-    # Endpoint for client to report a win (board cleared)
     data = request.get_json()
-    if not data or 'size' not in data:
+    if not data or 'size' not in data or 'board' not in data or 'token' not in data:
         abort(400)
+
+    board = data['board']
     size = data['size']
-    # Validate that this board size is the next expected win for the user
+    token = data['token']
+
+    if not verify_signature(board, size, token):
+        abort(403)
+
     con = get_db()
     cur = con.cursor()
     cur.execute('SELECT largest_board FROM users WHERE id = %s', (session['user_id'],))
@@ -159,16 +189,13 @@ def win():
         con.close()
         abort(400)
     current_best = row[0]
-    # The expected winning size is either 9 (if none beaten yet) or current_best + 1
-    expected = current_best + 1
-    if expected < 9:
-        expected = 9
+    expected = max(9, current_best + 1)
     if size == expected and size > current_best:
-        # Update user record with new largest_board
         cur.execute('UPDATE users SET largest_board = %s WHERE id = %s', (size, session['user_id']))
         con.commit()
     con.close()
     return jsonify(success=True)
+
 
 import threading
 from time import time
