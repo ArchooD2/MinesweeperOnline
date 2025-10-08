@@ -215,7 +215,7 @@ function initGame() {
             initGame();
 
             // Start a fresh timer for the new game
-            startTimer();
+            // Timer will start on first cell click, not here.
         });
     }
 
