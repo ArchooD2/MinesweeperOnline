@@ -199,6 +199,10 @@ function initGame() {
     const resetBtn = document.getElementById('reset-btn');
     if (resetBtn) {
         resetBtn.addEventListener('click', () => {
+            // Stop and reset the timer before restarting
+            stopTimer();
+            document.getElementById('timer').textContent = "Time: 0s";
+
             // Reset game state
             board = [];
             neighborCount = [];
@@ -206,11 +210,15 @@ function initGame() {
             flagged = [];
             firstClick = true;
             gameOver = false;
-            
+
             // Reinitialize game
             initGame();
+
+            // Start a fresh timer for the new game
+            startTimer();
         });
     }
+
     const flagToggle = document.getElementById('flag-mode-toggle');
     if (flagToggle) {
         flagToggle.addEventListener('change', (e) => {
