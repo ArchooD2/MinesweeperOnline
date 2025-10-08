@@ -199,6 +199,10 @@ function initGame() {
     const resetBtn = document.getElementById('reset-btn');
     if (resetBtn) {
         resetBtn.addEventListener('click', () => {
+            // Stop and reset the timer before restarting
+            stopTimer();
+            document.getElementById('timer').textContent = "Time: 0s";
+
             // Reset game state
             board = [];
             neighborCount = [];
@@ -206,11 +210,15 @@ function initGame() {
             flagged = [];
             firstClick = true;
             gameOver = false;
-            
+
             // Reinitialize game
             initGame();
+
+            // Start a fresh timer for the new game
+            // Timer will start on first cell click, not here.
         });
     }
+
     const flagToggle = document.getElementById('flag-mode-toggle');
     if (flagToggle) {
         flagToggle.addEventListener('change', (e) => {
@@ -324,6 +332,7 @@ async function handleCellClick(event, fromRight = false) {
             return; // Board failed to initialize; skip further logic
         }
         firstClick = false;
+        startTimer();
     }
 
     
@@ -375,15 +384,43 @@ async function handleCellClick(event, fromRight = false) {
     }
     
     if (board[r][c]) {
-        revealMine(r, c);
+        revealMine(r, c, true); // pass flag for clicked mine
         gameOver = true;
         revealAllMines();
-        alert("Game Over! You hit a mine. Press Restart to play again.");
+        stopTimer();
+
+        const totalSafe = BOARD_SIZE * BOARD_SIZE - NUM_MINES;
+        let revealedCount = 0;
+        for (let rr = 0; rr < BOARD_SIZE; rr++) {
+            for (let cc = 0; cc < BOARD_SIZE; cc++) {
+                if (revealed[rr][cc] && !board[rr][cc]) revealedCount++;
+            }
+        }
+        const completion = ((revealedCount / totalSafe) * 100).toFixed(1);
+        alert(`Game Over! You hit a mine.\nBoard completion: ${completion}%`);
         return;
-    }    
+    }
+    
 
     revealCell(r, c);
     checkWin();
+}
+let timerInterval = null;
+let startTime = null;
+
+function startTimer() {
+    startTime = Date.now();
+    timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        document.getElementById('timer').textContent = `Time: ${elapsed}s`;
+    }, 1000);
+}
+
+function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
 }
 
 
@@ -462,14 +499,14 @@ function revealCell(r, c) {
     }
 }
 
-function revealMine(r, c) {
-    // Reveal a mine at (r,c)
+function revealMine(r, c, isClicked = false) {
     const table = document.querySelector('#game-container table');
     const cell = table.rows[r].cells[c];
-    cell.classList.add('revealed');
+    cell.classList.add('revealed', 'mine');
     cell.textContent = '\uD83D\uDCA3'; // 💣 bomb emoji
-    cell.classList.add('mine');
+    if (isClicked) cell.classList.add('mine-clicked');
 }
+
 
 function revealAllMines() {
     // Reveal all mines (called on game over)
@@ -508,6 +545,7 @@ function checkWin() {
                 }
             }
         }
+        stopTimer();
         alert('Congratulations! You cleared the board! Moving to the next level...');
         // Notify the server to update the user's progress, then reload for next level
         fetch('/win', {
