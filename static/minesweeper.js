@@ -386,7 +386,7 @@ async function handleCellClick(event, fromRight = false) {
     if (board[r][c]) {
         revealMine(r, c, true); // pass flag for clicked mine
         gameOver = true;
-        revealAllMines();
+        revealAllMines(r, c);
         stopTimer();
 
         const totalSafe = BOARD_SIZE * BOARD_SIZE - NUM_MINES;
@@ -509,11 +509,12 @@ function revealMine(r, c, isClicked = false) {
 }
 
 
-function revealAllMines() {
+function revealAllMines(clickedRow, clickedCol) {
     // Reveal all mines (called on game over)
     const table = document.querySelector('#game-container table');
     for (let r = 0; r < BOARD_SIZE; r++) {
         for (let c = 0; c < BOARD_SIZE; c++) {
+            if (r === clickedRow && c === clickedCol) continue;
             if (board[r][c] && !revealed[r][c]) {
                 const cell = table.rows[r].cells[c];
                 cell.classList.add('revealed');
