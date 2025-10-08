@@ -513,7 +513,7 @@ function revealAllMines() {
             }
         }
     }
-    stopTimer();
+    // stopTimer(); // Removed redundant call
 }
 
 function checkWin() {
