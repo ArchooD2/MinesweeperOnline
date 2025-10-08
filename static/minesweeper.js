@@ -393,7 +393,7 @@ async function handleCellClick(event, fromRight = false) {
         let revealedCount = 0;
         for (let rr = 0; rr < BOARD_SIZE; rr++) {
             for (let cc = 0; cc < BOARD_SIZE; cc++) {
-                if (revealed[rr][cc]) revealedCount++;
+                if (revealed[rr][cc] && !board[rr][cc]) revealedCount++;
             }
         }
         const completion = ((revealedCount / totalSafe) * 100).toFixed(1);
