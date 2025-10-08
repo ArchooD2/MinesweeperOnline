@@ -225,7 +225,8 @@ function initGame() {
             flagMode = e.target.checked;
         });
     }
-    
+    document.getElementById('mine-counter').textContent = `Mines left: ${NUM_MINES}`;
+
 }
 
 /**
@@ -423,6 +424,14 @@ function stopTimer() {
     }
 }
 
+function updateMineCounter() {
+    const flaggedCount = flagged.flat().filter(Boolean).length;
+    const remaining = NUM_MINES - flaggedCount;
+    const counter = document.getElementById('mine-counter');
+    if (counter) {
+        counter.textContent = `Mines left: ${remaining}`;
+    }
+}
 
 /**
  * Handles right-click events on a Minesweeper cell to toggle its flagged state.
@@ -457,6 +466,7 @@ function handleCellRightClick(event,fromLeft=false) {
         cell.classList.add('flagged');
         cell.textContent = '\uD83D\uDEA9'; // 🚩 flag emoji
     }
+    updateMineCounter();
 
 }
 

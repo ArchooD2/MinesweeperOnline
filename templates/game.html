@@ -2,7 +2,10 @@
 {% block content %}
 <h2>Minesweeper Game</h2>
 <p>Board: {{ board_size }}x{{ board_size }} with {{ mines }} mines.</p>
-<p id="timer">Time: 0s</p>
+<div id="hud">
+  <span id="timer">Time: 0s</span>
+  <span id="mine-counter">Mines left: 0</span>
+</div>
 <label for="flag-mode-toggle">
   <input type="checkbox" id="flag-mode-toggle"> Flag Mode (mobile)
 </label>
