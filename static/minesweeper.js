@@ -503,7 +503,8 @@ function revealMine(r, c, isClicked = false) {
     const table = document.querySelector('#game-container table');
     const cell = table.rows[r].cells[c];
     cell.classList.add('revealed', 'mine');
-    cell.textContent = '\uD83D\uDCA3'; // 💣 bomb emoji
+    if (isClicked) cell.textContent = '\uD83D\uDCA5'; // explosion instead of bomb
+    else cell.textContent = '\uD83D\uDCA3'; // 💣 bomb emoji
     if (isClicked) cell.classList.add('mine-clicked');
 }
 
