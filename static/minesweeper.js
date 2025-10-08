@@ -521,7 +521,6 @@ function revealAllMines() {
             }
         }
     }
-    // stopTimer(); // Removed redundant call
 }
 
 function checkWin() {
