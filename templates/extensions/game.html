@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">Minesweeper+ (Extensions)</h1>
+
+<div id="ui">
+  <span id="mine-counter"></span>
+  <span id="timer">Time: 0s</span>
+</div>
+<div id="game-container"></div>
+
+<button id="reset-btn">Restart</button>
+<label><input type="checkbox" id="flag-mode-toggle"> Flag Mode</label>
+
+<script>
+  const BOARD_SIZE = {{ size }};
+  const MODIFIERS = {{ mods | tojson }};
+  const NUM_MINES = Math.floor(BOARD_SIZE * BOARD_SIZE * 0.2);
+</script>
+<script src="{{ url_for('static', filename='extensions/minesweeper.js') }}"></script>
+{% endblock %}

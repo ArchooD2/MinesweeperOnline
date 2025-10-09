@@ -246,5 +246,15 @@ def changelogs():
         logging.error(f"Error getting changelogs: {e.stderr}")
     return render_template('changelogs.html', commits=commits)
 
+@app.route('/extensions/startup')
+def extensions_startup():
+    return render_template('extensions/startup.html')
+
+@app.route('/extensions/game')
+def extensions_game():
+    size = int(request.args.get('size', 10))
+    mods = request.args.get('mods', '').split(',') if request.args.get('mods') else []
+    return render_template('extensions/game.html', size=size, mods=mods)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

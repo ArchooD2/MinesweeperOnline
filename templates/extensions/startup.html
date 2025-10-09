@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="page-title">Minesweeper Extensions</h1>
+
+<form id="extension-form" class="extension-form">
+  <label for="board-size">Board Size:</label>
+  <select id="board-size" name="size">
+    <option value="8">8×8</option>
+    <option value="10" selected>10×10</option>
+    <option value="14">14×14</option>
+    <option value="20">20×20</option>
+  </select>
+
+  <h3>Modifiers:</h3>
+  <label><input type="checkbox" name="mods" value="flagless"> Flagless Mode</label><br>
+  <label><input type="checkbox" name="mods" value="halfFlags"> Half Flags Only</label><br>
+  <label><input type="checkbox" name="mods" value="typingChallenge"> Typing Challenge</label><br>
+  <label><input type="checkbox" name="mods" value="hiddenNumbers"> Hidden Numbers</label><br>
+  <label><input type="checkbox" name="mods" value="ceilingMines"> Ceiling Mine Count</label><br>
+
+  <button type="submit">Start Game</button>
+</form>
+
+<script src="{{ url_for('static', filename='extensions/startup.js') }}"></script>
+{% endblock %}
